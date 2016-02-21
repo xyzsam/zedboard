@@ -157,7 +157,7 @@ void print_buffer(int *in, size_t row_size) {
 }
 
 int main() {
-  int status, i, num_failures, ProcessedBdCount;
+  int status, i, num_failures;
   struct DmaChannel channel;
   struct DmaPacket packet;
   size_t num_bytes = 256 * sizeof(int);
@@ -168,9 +168,9 @@ int main() {
   init_copy(&copy_device, XPAR_COPY_AXI_0_DEVICE_ID);
   init_packet(&packet, &channel);
   status = TxSetup(&dma_device, &channel);
-  CHECK_STATUS(status, "tx setup failed!\r\n");
+  CHECK(status, "tx setup failed!\r\n");
   status = RxSetup(&dma_device, &packet);
-  CHECK_STATUS(status, "rx setup failed!\r\n");
+  CHECK(status, "rx setup failed!\r\n");
 
   memset((void *)packet.TxBuf, TEST_TX_INVALID_VALUE,
          RX_BUFFER_BASE - TX_BUFFER_BASE);
@@ -185,13 +185,13 @@ int main() {
   packet.TxNumBytes = num_bytes;
 
   status = PreparePacket(&packet);
-  CHECK_STATUS(status, "preparing packet failed!\r\n");
+  CHECK(status, "preparing packet failed!\r\n");
 
   XCopy_axi_Start(&copy_device);
   status = SendPacket(&packet);
-  CHECK_STATUS(status, "sending packet failed!\r\n");
-  status = WaitForCompletion(&packet, &ProcessedBdCount);
-  CHECK_STATUS(status, "waiting for completion failed failed!\r\n");
+  CHECK(status, "sending packet failed!\r\n");
+  status = WaitForCompletion(&packet);
+  CHECK(status, "waiting for completion failed failed!\r\n");
 
   num_failures = 0;
 

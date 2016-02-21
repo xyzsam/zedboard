@@ -239,7 +239,7 @@ int WaitForCompletion(struct DmaPacket *packet) {
 
   status = XAxiDma_BdRingFree(packet->channel->TxRingPtr, ProcessedBdCount,
                               packet->TxBdPtr);
-  CHECK_STATUS_AND_QUIT(status, "freeing tx BDs failed.\r\n");
+  CHECK(status, "freeing tx BDs failed.\r\n");
 
   timeout = 5000;
   /* Wait until the data has been received by the Rx channel */
@@ -257,6 +257,6 @@ int WaitForCompletion(struct DmaPacket *packet) {
   /* Free all processed RX BDs for future transmission */
   status = XAxiDma_BdRingFree(packet->channel->RxRingPtr, ProcessedBdCount,
                               packet->RxBdPtr);
-  CHECK_STATUS_AND_QUIT(status, "freeing rx BDs failed. \r\n");
+  CHECK(status, "freeing rx BDs failed. \r\n");
   return XST_SUCCESS;
 }

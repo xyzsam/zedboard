@@ -60,7 +60,7 @@ struct DmaPacket {
 
 int RxSetup(XAxiDma *AxiDmaInstPtr, struct DmaPacket *packet);
 int TxSetup(XAxiDma *AxiDmaInstPtr, struct DmaChannel *channel);
-int WaitForCompletion(struct DmaPacket *packet, int *ProcessedBdCount);
+int WaitForCompletion(struct DmaPacket *packet);
 int PreparePacket(struct DmaPacket *packet);
 int SendPacket(struct DmaPacket *packet);
 
