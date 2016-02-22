@@ -1,11 +1,16 @@
+toplevel_dir := $(CURDIR)/../../../
+
 BIN = roundtrip
 PL_NAME = roundtrip_v1_0
 SRCS = roundtrip.c
-BSP_HOME = /group/vlsiarch/samxi/active_projects/xilinx/vivado_workspace/roundtrip/roundtrip.sdk/system2_wrapper_fsbl_bsp
+BSP_HOME = ../common/bsp
 
 all: zynq
 
-hls:
-	vivado_hls hls.tcl
+test:
+	@echo $(mkfile_path)
+	@echo $(current_dir)
+	@echo $(toplevel_dir)
+	@echo $(CURDIR)
 
-include Makefile.arm
+include ../../../common/makefiles/Makefile.arm

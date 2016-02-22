@@ -6,8 +6,8 @@
 
 #include "arm_timing_utils.h"
 #include "xroundtrip.h"
-static XRoundtrip instance;
 
+static XRoundtrip instance;
 
 void init_device() {
   int status = XRoundtrip_Initialize(&instance, "roundtrip_static_reg");
@@ -22,22 +22,21 @@ void init_device() {
 float run_test_time(int num_tests) {
   uint32_t elapsed;
   float average;
-  int i, val, ret, failures;
+  int i, init_val;
+  struct timeval start, end;
   elapsed = 0;
   average = 0;
-  failures = 0;
-  struct timeval start, end;
+  XRoundtrip_Start_fast(&instance);
+  init_val = XRoundtrip_Get_return_fast(&instance);
 
   gettimeofday(&start, NULL);
-  for (i = 0; i < num_tests; i++) {
-#ifdef ZYNQ
+  i = init_val;
+  while (i < init_val + num_tests) {
     XRoundtrip_Start_fast(&instance);
-    while (!XRoundtrip_IsDone_fast(&instance)) ;
-#endif
+    i = XRoundtrip_Get_return_fast(&instance);
   }
   gettimeofday(&end, NULL);
 
-  printf("Failures: %0.2f\n", ((float)failures)/num_tests);
   elapsed = (end.tv_sec * 1e6 + end.tv_usec) - (start.tv_sec * 1e6 - start.tv_usec);
   average = ((float) elapsed) / num_tests;
   return average;
@@ -47,23 +46,25 @@ float run_test_time(int num_tests) {
 float run_test_ccnt(int num_tests) {
   uint32_t start_time, end_time, elapsed, total_elapsed;
   float average;
-  int i, val, ret, failures;
-  struct timespec sleep_time;
+  int i, val, failures, init_val;
   failures = 0;
   elapsed = 0;
   total_elapsed = 0;
   average = 0;
 
+  init_val = XRoundtrip_Get_return_fast(&instance);
+  i = init_val;
   clear_perfcounters(1,0);
-  for (i = 0; i < num_tests; i++) {
-#ifdef ZYNQ
-    start_time = get_cyclecount();
+  while (i < init_val + num_tests) {
     XRoundtrip_Start_fast(&instance);
-    while (!XRoundtrip_IsDone_fast(&instance));
+    start_time = get_cyclecount();
+    val = XRoundtrip_Get_return_fast(&instance);
     end_time = get_cyclecount();
     elapsed = (end_time - start_time);
     total_elapsed += elapsed;
-#endif
+    if (val != i+1)
+      failures++;
+    i = val;
   }
 
   printf("Failures: %0.2f\n", ((float)failures)/num_tests);
@@ -74,14 +75,14 @@ float run_test_ccnt(int num_tests) {
 // Meant to be run under perf. It does not touch any of the performance
 // counters.
 float run_test_perf(int num_tests) {
-  int i, val, ret, failures;
-  failures = 0;
+  int i, init_val;
 
-  for (i = 0; i < num_tests; i++) {
-#ifdef ZYNQ
+  XRoundtrip_Start_fast(&instance);
+  init_val = XRoundtrip_Get_return_fast(&instance);
+  i = init_val;
+  while (i < init_val + num_tests) {
     XRoundtrip_Start_fast(&instance);
-    while (!XRoundtrip_IsDone_fast(&instance));
-#endif
+    i = XRoundtrip_Get_return_fast(&instance);
   }
 
   return 0;
