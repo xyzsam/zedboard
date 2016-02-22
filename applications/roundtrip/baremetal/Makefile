@@ -4,6 +4,7 @@ SRCS = roundtrip.c
 
 CPPFLAGS +=
 CFLAGS += -O3 $(CPPFLAGS)
+ARM_LFLAGS += -L$(BSP_LIBS) -lxil
 
 all: zynq
 
