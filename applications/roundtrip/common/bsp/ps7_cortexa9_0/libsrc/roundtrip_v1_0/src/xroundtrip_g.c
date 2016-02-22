@@ -44,6 +44,8 @@
 * The configuration table for devices
 */
 
+#ifndef __linux__
+
 XRoundtrip_Config XRoundtrip_ConfigTable[] =
 {
 	{
@@ -53,3 +55,4 @@ XRoundtrip_Config XRoundtrip_ConfigTable[] =
 };
 
 
+#endif
