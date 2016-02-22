@@ -81,12 +81,14 @@ int XRoundtrip_Release(XRoundtrip *InstancePtr);
 #endif
 
 void XRoundtrip_Start(XRoundtrip *InstancePtr);
+void XRoundtrip_Start_fast(XRoundtrip *InstancePtr);
 u32 XRoundtrip_IsDone(XRoundtrip *InstancePtr);
 u32 XRoundtrip_IsIdle(XRoundtrip *InstancePtr);
 u32 XRoundtrip_IsReady(XRoundtrip *InstancePtr);
 void XRoundtrip_EnableAutoRestart(XRoundtrip *InstancePtr);
 void XRoundtrip_DisableAutoRestart(XRoundtrip *InstancePtr);
 u32 XRoundtrip_Get_return(XRoundtrip *InstancePtr);
+u32 XRoundtrip_Get_return_fast(XRoundtrip *InstancePtr);
 
 
 void XRoundtrip_InterruptGlobalEnable(XRoundtrip *InstancePtr);

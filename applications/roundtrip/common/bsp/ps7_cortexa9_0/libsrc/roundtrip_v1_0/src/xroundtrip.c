@@ -21,6 +21,12 @@ int XRoundtrip_CfgInitialize(XRoundtrip *InstancePtr, XRoundtrip_Config *ConfigP
 }
 #endif
 
+void XRoundtrip_Start_fast(XRoundtrip *InstancePtr) {
+    u32 Data;
+    Data = XRoundtrip_ReadReg(InstancePtr->Bus_a_BaseAddress, XROUNDTRIP_BUS_A_ADDR_AP_CTRL) & 0x80;
+    XRoundtrip_WriteReg(InstancePtr->Bus_a_BaseAddress, XROUNDTRIP_BUS_A_ADDR_AP_CTRL, Data | 0x01);
+}
+
 void XRoundtrip_Start(XRoundtrip *InstancePtr) {
     u32 Data;
 
@@ -74,6 +80,13 @@ void XRoundtrip_DisableAutoRestart(XRoundtrip *InstancePtr) {
     Xil_AssertVoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
 
     XRoundtrip_WriteReg(InstancePtr->Bus_a_BaseAddress, XROUNDTRIP_BUS_A_ADDR_AP_CTRL, 0);
+}
+
+u32 XRoundtrip_Get_return_fast(XRoundtrip *InstancePtr) {
+    u32 Data;
+
+    Data = XRoundtrip_ReadReg(InstancePtr->Bus_a_BaseAddress, XROUNDTRIP_BUS_A_ADDR_AP_RETURN);
+    return Data;
 }
 
 u32 XRoundtrip_Get_return(XRoundtrip *InstancePtr) {
