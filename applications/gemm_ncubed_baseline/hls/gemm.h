@@ -35,10 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include "ncubed_args.h"
 
-#ifdef ZYNQ
-#include "zynq.h"
-#endif
-
 //Define the input range to operate over
 #define MIN 2147483646
 #define MAX -2147483646
@@ -55,13 +51,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gem5/dma_interface.h"
 #endif
 
-// void gemm(TYPE m1[row_size * col_size], TYPE m2[row_size * col_size], TYPE prod[row_size * col_size]);
 void gemm(TYPE m1[row_size * col_size * 2], TYPE prod[row_size * col_size]);
-/*
-void gemm(struct axistream_t m1[row_size * col_size * 2],
-          struct axistream_t prod[row_size * col_size],
-          int *status);
- */
+
 ////////////////////////////////////////////////////////////////////////////////
 // Test harness interface code.
 int INPUT_SIZE = sizeof(struct bench_args_t);
@@ -74,9 +65,6 @@ void run_benchmark( void *vargs ) {
   int status = 0;
   memset(&args->prod[0], 0, row_size*col_size*sizeof(int));
 
-#ifdef ZYNQ
-  run_on_zynq(args);
-#else
 #ifdef GEM5_HARNESS
   mapArrayToAccelerator(
       MACHSUITE_GEMM_NCUBED, "m1", (void*)&args->m1, sizeof(args->m1));
@@ -86,7 +74,6 @@ void run_benchmark( void *vargs ) {
       MACHSUITE_GEMM_NCUBED, "prod", (void*)&args->prod, sizeof(args->prod));
   invokeAcceleratorAndBlock(MACHSUITE_GEMM_NCUBED);
 #else
-  // gemm( args->m1, args->m2, args->prod );
   // Add some fake data.
   for (i = 0; i < row_size; i++) {
     for (j = 0; j < row_size; j++) {
@@ -98,20 +85,7 @@ void run_benchmark( void *vargs ) {
     args->m2[i*row_size + i] = 1;
   memcpy(&mat[0], &args->m1[0], row_size*col_size*sizeof(TYPE));
   memcpy(&mat[row_size*col_size], &args->m2[0], row_size*col_size*sizeof(TYPE));
-  gemm(mat, args->prod);//  , &tlast);
-  /*
-  struct axistream_t m1_axi[row_size * col_size * 2];
-  struct axistream_t prod_axi[row_size * col_size * 2];
-  for (i = 0; i < row_size*2; i++) {
-    for (j = 0; j < col_size; j++) {
-      m1_axi[i*col_size+j].data = args->m1[i*col_size + j];
-      m1_axi[i*col_size+j].keep = true;
-      m1_axi[i*col_size+j].last = false;
-    }
-  }
-  */
-  // gemm(m1_axi, prod_axi, &status);
-#endif
+  gemm(mat, args->prod);
 #endif
 }
 

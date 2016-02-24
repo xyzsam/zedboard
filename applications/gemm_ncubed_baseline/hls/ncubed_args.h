@@ -9,8 +9,6 @@
 // Specify row/column sizes
 #define row_size 64
 #define col_size 64
-// #define row_size 8
-// #define col_size 8
 
 struct bench_args_t {
   TYPE m1[row_size * col_size];

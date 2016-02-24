@@ -17,13 +17,14 @@
 static XGemm gemm_device;
 static XAxiDma dma_device;
 
-int init_dma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id) {
+int init_dma(XAxiDma *dma_device, struct DmaChannel *channel,
+             int dma_device_id) {
   int status = 0;
   XAxiDma_Config *config;
   config = XAxiDma_LookupConfig(dma_device_id);
   if (!config) {
-	  printf("Failed to lookup DMA config.\r\n");
-	  return -1;
+    printf("Failed to lookup DMA config.\r\n");
+    return -1;
   }
   status = XAxiDma_CfgInitialize(dma_device, config);
   if (status != XST_SUCCESS) {
@@ -32,7 +33,8 @@ int init_dma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id
   }
 
   XAxiDma_Reset(dma_device);
-  while (!XAxiDma_ResetIsDone(dma_device)) {}
+  while (!XAxiDma_ResetIsDone(dma_device)) {
+  }
   XAxiDma_IntrEnable(dma_device,
                      (XAXIDMA_IRQ_IOC_MASK | XAXIDMA_IRQ_ERROR_MASK),
                      XAXIDMA_DMA_TO_DEVICE);
@@ -46,7 +48,7 @@ int init_dma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id
   return 0;
 }
 
-int init_gemm(XGemm* gemm_device, int gemm_device_id) {
+int init_gemm(XGemm *gemm_device, int gemm_device_id) {
   int status = 0;
   status = XGemm_Initialize(gemm_device, gemm_device_id);
   if (status != XST_SUCCESS) {
@@ -56,19 +58,22 @@ int init_gemm(XGemm* gemm_device, int gemm_device_id) {
   return 0;
 }
 
-int init_intc(XScuGic* int_device, XAxiDma* dma_device, int int_device_id, int s2mm_intr_id, int mm2s_intr_id) {
-  XScuGic_Config* cfg;
+int init_intc(XScuGic *int_device, XAxiDma *dma_device, int int_device_id,
+              int s2mm_intr_id, int mm2s_intr_id) {
+  XScuGic_Config *cfg;
   int status = 0;
 
   cfg = XScuGic_LookupConfig(int_device_id);
   if (!cfg) {
-    xil_printf("No hardware config found for interrupt controller id %d\r\n", int_device_id);
+    xil_printf("No hardware config found for interrupt controller id %d\r\n",
+               int_device_id);
     return -1;
   }
 
   status = XScuGic_CfgInitialize(int_device, cfg, cfg->CpuBaseAddress);
   if (status != XST_SUCCESS) {
-    xil_printf("Failed to initialize interrupt controller with status %d\r\n", status);
+    xil_printf("Failed to initialize interrupt controller with status %d\r\n",
+               status);
     return -1;
   }
 
@@ -77,16 +82,20 @@ int init_intc(XScuGic* int_device, XAxiDma* dma_device, int int_device_id, int s
   XScuGic_SetPriorityTriggerType(int_device, mm2s_intr_id, 0xA8, 0x3);
 
   // Connect handlers
-  status = XScuGic_Connect(int_device, s2mm_intr_id, (Xil_InterruptHandler)s2mm_isr, dma_device);
-  if (status != XST_SUCCESS)
-  {
-    xil_printf("ERROR! Failed to connect s2mm_isr to the interrupt controller.\r\n", status);
+  status = XScuGic_Connect(int_device, s2mm_intr_id,
+                           (Xil_InterruptHandler)s2mm_isr, dma_device);
+  if (status != XST_SUCCESS) {
+    xil_printf(
+        "ERROR! Failed to connect s2mm_isr to the interrupt controller.\r\n",
+        status);
     return -1;
   }
-  status = XScuGic_Connect(int_device, mm2s_intr_id, (Xil_InterruptHandler)mm2s_isr, dma_device);
-  if (status != XST_SUCCESS)
-  {
-    xil_printf("ERROR! Failed to connect mm2s_isr to the interrupt controller.\r\n", status);
+  status = XScuGic_Connect(int_device, mm2s_intr_id,
+                           (Xil_InterruptHandler)mm2s_isr, dma_device);
+  if (status != XST_SUCCESS) {
+    xil_printf(
+        "ERROR! Failed to connect mm2s_isr to the interrupt controller.\r\n",
+        status);
     return -1;
   }
 
@@ -94,9 +103,12 @@ int init_intc(XScuGic* int_device, XAxiDma* dma_device, int int_device_id, int s
   XScuGic_Enable(int_device, s2mm_intr_id);
   XScuGic_Enable(int_device, mm2s_intr_id);
 
-  // Initialize exception table and register the interrupt controller handler with exception table
+  // Initialize exception table and register the interrupt controller handler
+  // with exception table
   Xil_ExceptionInit();
-  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, int_device);
+  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
+                               (Xil_ExceptionHandler)XScuGic_InterruptHandler,
+                               int_device);
 
   // Enable non-critical exceptions
   Xil_ExceptionEnable();
@@ -104,56 +116,54 @@ int init_intc(XScuGic* int_device, XAxiDma* dma_device, int int_device_id, int s
   return 0;
 }
 
-void init_packet(struct DmaPacket* packet, struct DmaChannel *channel) {
-	packet->TxBuf = (u8*) TX_BUFFER_BASE;
-	packet->RxBuf = (u8*) RX_BUFFER_BASE;
-	packet->channel = channel;
+void init_packet(struct DmaPacket *packet, struct DmaChannel *channel) {
+  packet->TxBuf = (u8 *)TX_BUFFER_BASE;
+  packet->RxBuf = (u8 *)RX_BUFFER_BASE;
+  packet->channel = channel;
 }
 
-void init_arrays(int* in, int* out, size_t rows) {
+void init_arrays(int *in, int *out, size_t rows) {
   int i, j;
   // Set the first array to a constant value.
   for (i = 0; i < rows; i++) {
-	  for (j = 0; j < rows; j++) {
-		  in[i*rows + j] = 3;
-	  }
+    for (j = 0; j < rows; j++) {
+      in[i * rows + j] = 3;
+    }
   }
 
   // Set the second array to be the identity matrix.
-  memset(&in[rows*rows], 0, rows*rows*sizeof(int));
-  for (i = rows; i < 2*rows; i++) {
-	  in[i*rows + i] = 1;
+  memset(&in[rows * rows], 0, rows * rows * sizeof(int));
+  for (i = rows; i < 2 * rows; i++) {
+    in[i * rows + i] = 1;
   }
 
   // Set the output array to be all -1.
-  memset(out, -1, rows*rows*sizeof(int));
+  memset(out, -1, rows * rows * sizeof(int));
 }
 
-void print_buffer(int* in, size_t row_size) {
+void print_buffer(int *in, size_t row_size) {
   int i, j;
   for (i = 0; i < row_size; i++) {
     for (j = 0; j < row_size; j++) {
-      xil_printf("%d ", in[i*row_size + j]);
+      xil_printf("%d ", in[i * row_size + j]);
     }
     xil_printf("\n");
   }
 }
 
-int main()
-{
+int main() {
   int status, i, num_failures, ProcessedBdCount;
   struct DmaChannel channel;
   struct DmaPacket packet;
-  size_t num_bytes = ROWS*ROWS*sizeof(int);
+  size_t num_bytes = ROWS * ROWS * sizeof(int);
   unsigned cycle_start, cycle_end;
   unsigned all_start, all_end;
   unsigned counter;
   unsigned int *input_array;
   unsigned int *output_array;
   counter = 0;
-  bool enable_interrupts = false;
   init_platform();
-  init_perfcounters(1,0);
+  init_perfcounters(1, 0);
 
   init_packet(&packet, &channel);
 
@@ -169,29 +179,26 @@ int main()
 
 #ifdef ENABLE_INTERRUPTS
   printf("Setting up interrupts\r\n");
-  enable_interrupts = true;
-  init_intc(&int_device,
-            &dma_device,
-            XPAR_PS7_SCUGIC_0_DEVICE_ID,
+  init_intc(&int_device, &dma_device, XPAR_PS7_SCUGIC_0_DEVICE_ID,
             XPAR_FABRIC_AXI_DMA_0_S2MM_INTROUT_INTR,
             XPAR_FABRIC_AXI_DMA_0_MM2S_INTROUT_INTR);
 #endif
 
   cycle_start = get_cyclecount();
-  //printf("Initializing GEMM.\r\n");
   init_gemm(&gemm_device, XPAR_XGEMM_0_DEVICE_ID);
   XGemm_Start(&gemm_device);
   cycle_end = get_cyclecount();
   gemm_init = cycle_end - cycle_start;
 
-  //printf("Initializing input and output arrays\r\n");
+  // Initialize input and output arrays.
   cycle_start = get_cyclecount();
-  memset((void*)packet.TxBuf, 0, RX_BUFFER_BASE - TX_BUFFER_BASE);
-  memset((void*)packet.RxBuf, TEST_RX_INVALID_VALUE, RX_BUFFER_HIGH - RX_BUFFER_BASE + 1);
-  input_array = (int*) packet.TxBuf;
-  output_array = (int*) packet.RxBuf;
+  memset((void *)packet.TxBuf, 0, RX_BUFFER_BASE - TX_BUFFER_BASE);
+  memset((void *)packet.RxBuf, TEST_RX_INVALID_VALUE,
+         RX_BUFFER_HIGH - RX_BUFFER_BASE + 1);
+  input_array = (int *)packet.TxBuf;
+  output_array = (int *)packet.RxBuf;
   init_arrays(input_array, output_array, ROWS);
-  packet.TxNumBytes = 2*num_bytes;
+  packet.TxNumBytes = 2 * num_bytes;
   packet.RxNumBytes = num_bytes;
   cycle_end = get_cyclecount();
   prepare_data = cycle_end - cycle_start;
@@ -206,28 +213,24 @@ int main()
   CHECK_STATUS_AND_QUIT(status, "sending packet");
 
   cycle_start = get_cyclecount();
-  while (!XGemm_IsDone(&gemm_device)) { counter++; }
+  while (!XGemm_IsDone(&gemm_device)) {
+    counter++;
+  }
   cycle_end = get_cyclecount();
   gemm_runtime = cycle_end - cycle_start;
 
   cycle_start = get_cyclecount();
   num_failures = 0;
-    for (i = 0; i < num_bytes; i++) {
-  	  if (packet.TxBuf[i] != packet.RxBuf[i]) {
-  		  num_failures++;
-  		  /*
-  		  if (packet.RxBuf[i] != TEST_RX_INVALID_VALUE)
-  			  xil_printf("At i = %d, Tx: 0x%x\t, Rx: 0x%x\r\n", i, packet.TxBuf[i], packet.RxBuf[i]);
-  			  */
-  	  }
+  for (i = 0; i < num_bytes; i++) {
+    if (packet.TxBuf[i] != packet.RxBuf[i]) {
+      num_failures++;
     }
+  }
   cycle_end = get_cyclecount();
   check_time = cycle_end - cycle_start;
 
   all_end = cycle_end;
   total_runtime = all_end - all_start;
-  // status = WaitForCompletion(&packet, &ProcessedBdCount, enable_interrupts);
-  // CHECK_STATUS_AND_QUIT(status, "waiting for completion failed");
 
   xil_printf("DMA setup latency: %d\r\n", dma_setup);
   xil_printf("DMA invocation latency: %d\r\n", dma_invocation);
@@ -240,11 +243,10 @@ int main()
   xil_printf("Output check: %d\r\n", check_time);
   xil_printf("Total runtime: %d\r\n", total_runtime);
 
-
   if (num_failures > 0)
-	  xil_printf("Failed %d times!\r\n", num_failures);
+    xil_printf("Failed %d times!\r\n", num_failures);
   else
-	  xil_printf("Test passed!\r\n");
+    xil_printf("Test passed!\r\n");
 
   cleanup_platform();
   return 0;

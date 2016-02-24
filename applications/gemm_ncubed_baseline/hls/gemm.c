@@ -31,24 +31,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void gemm( TYPE m1[row_size * col_size * 2],
            TYPE prod[row_size * col_size]) {
-/*
-void gemm(struct axistream_t m1[row_size * col_size * 2],
-          struct axistream_t prod[row_size * col_size]) {
- */
 #ifdef _SYNTHESIS_
 #pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
 #pragma HLS INTERFACE axis port=m1 bundle=INPUT_STREAM
-// #pragma HLS INTERFACE axis port=m2 bundle=INPUT_STREAM
 #pragma HLS INTERFACE axis port=prod bundle=OUTPUT_STREAM
 #endif
   int i, j, k, i_row, elem;
   bool last;
 #ifdef DMA_MODE
-  dmaLoad(&m1[0],4096*4*8);
-  // dmaLoad(&m2[0],4096*4*8);
+  dmaLoad(&m1[0],4096*4*2*8);
 #endif
 #ifdef _SYNTHESIS_
-  // *tlast = false;
   // Read in data sequentially (which is needed for stream IO).
   TYPE m1_inner[row_size * col_size];
   TYPE m2_inner[row_size * col_size];
@@ -68,13 +61,10 @@ void gemm(struct axistream_t m1[row_size * col_size * 2],
       m2_inner[i_row + j] = m1[i_row + j];
     }
   }
-  // memcpy(m1_inner, m1, row_size*col_size*sizeof(TYPE));
-  // memcpy(m2_inner, m2, row_size*col_size*sizeof(TYPE));
 #else
   #error "Not supported!"
   #define m1_inner m1
   #define m2_inner m2
-  // #define prod_inner prod
 #endif
     TYPE mult, k_col;
     mult = 0;
@@ -92,25 +82,18 @@ void gemm(struct axistream_t m1[row_size * col_size * 2],
                 sum += mult;
             }
             prod_inner[elem] = sum;
-            // *tlast = (elem == (row_size * col_size - 1));
         }
     }
 #ifdef DMA_MODE
   dmaStore(&prod[0],4096*4*8);
 #endif
 #ifdef _SYNTHESIS_
-  // memcpy(prod, prod_inner, row_size*col_size*sizeof(TYPE));
   for (i = 0; i < row_size; i++) {
     i_row = i * col_size;
     for (j = 0; j < col_size; j++) {
 #pragma HLS PIPELINE II=1
       elem = i_row + j;
-      last = (elem == (row_size * col_size - 1));
-      prod[elem]= prod_inner[elem];
-      /*
-      prod[elem].last = last;
-      prod[elem].keep = true;
-      */
+      prod[elem] = prod_inner[elem];
     }
   }
 #endif
