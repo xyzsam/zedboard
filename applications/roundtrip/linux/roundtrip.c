@@ -34,6 +34,7 @@ float run_test_time(int num_tests) {
   while (i < init_val + num_tests) {
     XRoundtrip_Start_fast(&instance);
     i = XRoundtrip_Get_return_fast(&instance);
+    asm volatile("dsb");
   }
   gettimeofday(&end, NULL);
 
@@ -45,29 +46,41 @@ float run_test_time(int num_tests) {
 // Directly reads the CCNT register for fine-grained profiling.
 float run_test_ccnt(int num_tests) {
   uint32_t start_time, end_time, elapsed, total_elapsed;
+  uint32_t start_elapsed, return_elapsed;
   float average;
   int i, val, failures, init_val;
   failures = 0;
   elapsed = 0;
   total_elapsed = 0;
+  start_elapsed = 0;
+  return_elapsed = 0;
   average = 0;
 
   init_val = XRoundtrip_Get_return_fast(&instance);
   i = init_val;
   clear_perfcounters(1,0);
   while (i < init_val + num_tests) {
-    XRoundtrip_Start_fast(&instance);
     start_time = get_cyclecount();
-    val = XRoundtrip_Get_return_fast(&instance);
+    XRoundtrip_Start_fast(&instance);
+    asm volatile("dsb");
     end_time = get_cyclecount();
     elapsed = (end_time - start_time);
-    total_elapsed += elapsed;
+    start_elapsed += elapsed;
+
+    start_time = get_cyclecount();
+    val = XRoundtrip_Get_return_fast(&instance);
+    asm volatile("dsb");
+    end_time = get_cyclecount();
+    elapsed = (end_time - start_time);
+    return_elapsed += elapsed;
     if (val != i+1)
       failures++;
     i = val;
   }
 
   printf("Failures: %0.2f\n", ((float)failures)/num_tests);
+  printf("Start: %2.2f\n", ((float)start_elapsed)/num_tests);
+  printf("Return: %2.2f\n", ((float)return_elapsed)/num_tests);
   average = ((float) (total_elapsed)) / num_tests;
   return average;
 }
