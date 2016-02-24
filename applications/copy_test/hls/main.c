@@ -57,7 +57,7 @@ int main() {
 #ifdef ENA_SIDECHANNELS
   printf("AXI4Stream sidechannels enabled!\n");
   struct axistream_t array[ARR_SIZE];
-  struct axistream_t outarray[ARR_SIZE+1];
+  struct axistream_t outarray[ARR_SIZE];
   init_axi(array, outarray);
   copy_axi(array, outarray);
   num_failures = check_axi(array, outarray);
