@@ -1,0 +1,56 @@
+# Cross compile aes for Zynq Zedboard target running Linux.
+#
+# Requires: arm-linux-gnueabihf-4.8 toolchain.
+#
+# To use, define the Make variables BIN for the root name of the binary, SRCS
+# for all the benchmark source c files, and PL_NAME for the name of the
+# generated IP core.
+
+.PHONY: all clean
+
+ifeq ($(BIN),)
+	$(error Need to define BIN variable!)
+endif
+ifeq ($(PL_NAME),)
+	$(error Need to define PL_NAME variable!)
+endif
+ifeq ($(BSP_HOME),)
+	$(error Need to define location of BSP!)
+endif
+ifeq ($(HW_PLATFORM),)
+	$(error Need to define location of hardware platform specification!)
+endif
+
+# Drivers and utility functions
+BSP_LIBS = $(BSP_HOME)/ps7_cortexa9_0/lib
+BSP_LIBSRC = $(BSP_HOME)/ps7_cortexa9_0/libsrc
+BSP_LIBSRC_PL = $(BSP_LIBSRC)/$(PL_NAME)/src
+BSP_LIBSRC_PL_SRCS = $(wildcard $(BSP_LIBSRC_PL)/*.c)
+BSP_BAREMETAL_INC = $(BSP_HOME)/ps7_cortexa9_0/include
+HW_PLATFORM_INC = $(HW_PLATFORM)/drivers/$(PL_NAME)/src
+WARNINGS = -Wall -Wno-unused-label
+COMMON_DIR = $(TOPLEVEL)/common/src
+XDMA_DIR = /group/vlsiarch/samxi/active_projects/xilinx/modules/zynq-xdma
+
+COMMON_SRCS = $(wildcard $(COMMON_DIR)/*.c)
+CPPFLAGS += -I$(COMMON_DIR) -I$(BSP_LIBSRC_PL) -I$(BSP_BAREMETAL_INC) -I$(XDMA_DIR)
+ifeq ($(ZYNQ_ENABLE),1)
+CPPFLAGS += -DZYNQ
+endif
+ARM_CFLAGS += -O3 $(CPPFLAGS) $(WARNINGS) -mcpu=cortex-a9 -static
+
+arm: zynq cpu
+
+zynq:
+	$(MAKE) -C . $(BIN)-arm "ZYNQ_ENABLE=1"
+	mv $(BIN)-arm $(BIN)-zynq
+
+cpu:
+	$(MAKE) -C . $(BIN)-arm "ZYNQ_ENABLE=0"
+	mv $(BIN)-arm $(BIN)-cpu
+
+$(BIN)-arm: $(SRCS) $(BSP_LIBSRC_PL_SRCS) $(COMMON_SRCS)
+	$(CROSS_COMPILE)gcc $(ARM_CFLAGS) -o $(BIN)-arm $^ $(ARM_LFLAGS)
+
+clean-arm:
+	rm -rf $(BIN)-cpu $(BIN)-zynq $(BIN)-arm
