@@ -37,7 +37,6 @@ void gemm( TYPE m1[row_size * col_size * 2],
 #pragma HLS INTERFACE axis port=prod bundle=OUTPUT_STREAM
 #endif
   int i, j, k, i_row, elem;
-  bool last;
 #ifdef DMA_MODE
   dmaLoad(&m1[0],4096*4*2*8);
 #endif
@@ -46,7 +45,6 @@ void gemm( TYPE m1[row_size * col_size * 2],
   TYPE m1_inner[row_size * col_size];
   TYPE m2_inner[row_size * col_size];
   TYPE prod_inner[row_size * col_size];
-  last = false;
   for (i = 0; i < row_size; i++) {
     i_row = i*col_size;
     for (j = 0; j < col_size; j++) {
