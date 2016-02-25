@@ -1,9 +1,9 @@
 open_project stencil_syn
 
-add_files -cflags "-D_SYNTHESIS_" stencil.c
+add_files stencil.c
 add_files input.data
 add_files check.data
-add_files -cflags "-D_SYNTHESIS_" -tb ../../../common/src/machsuite_harness.c
+add_files -tb ../../../common/src/machsuite_harness.c
 
 set_top stencil
 open_solution -reset solution

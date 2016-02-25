@@ -29,68 +29,58 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "stencil.h"
 
-
-#ifdef _SYNTHESIS_
-void stencil (TYPE in_stream[row_size * col_size + f_size], TYPE out_stream[row_size * col_size]) {
+void stencil(TYPE in_stream[row_size * col_size + f_size],
+             TYPE out_stream[row_size * col_size]) {
 #pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
 #pragma HLS INTERFACE axis port=in_stream bundle=INPUT_STREAM
 #pragma HLS INTERFACE axis port=out_stream bundle=OUTPUT_STREAM
-#else
-void stencil (TYPE orig[row_size * col_size], TYPE sol[row_size * col_size], TYPE filter[f_size]) {
-#endif
+  int i, j, k1, k2, row;
+  int elem;
+  TYPE orig[row_size * col_size];
+  TYPE sol[row_size * col_size];
+  TYPE filter[f_size];
+  for (i = 0; i < row_size; i++) {
+    row = i * col_size;
+    for (j = 0; j < col_size; j++) {
+#pragma HLS PIPELINE II=1
+      elem = row + j;
+      orig[elem] = in_stream[elem];
+      sol[elem] = 0;
+    }
+  }
+  for (i = 0; i < f_size; i++) {
+#pragma HLS PIPELINE II=1
+    filter[i] = in_stream[row_size * col_size + i];
+  }
 
-#ifdef DMA_MODE
-    dmaLoad(&orig[0],8580*4*8);
-#endif
-    int i, j, k1, k2, row;
-#ifdef _SYNTHESIS_
-    int elem;
-    TYPE orig[row_size * col_size];
-    TYPE sol[row_size * col_size];
-    TYPE filter[f_size];
-    for (i = 0; i < row_size; i++) {
-        row = i*col_size;
-        for (j = 0; j < col_size; j++) {
-            #pragma HLS PIPELINE II=1
-            elem = row+j;
-            orig[elem] = in_stream[elem];
-            sol[elem] = 0;
+  TYPE temp, mul;
+  temp = 0;
+
+stencil_label1:
+  for (i = 0; i < row_size - 2; i++) {
+    row = i * col_size;
+  stencil_label2:
+    for (j = 0; j < col_size - 2; j++) {
+      temp = 0;
+    stencil_label3:
+      for (k1 = 0; k1 < 3; k1++) {
+      stencil_label4:
+        for (k2 = 0; k2 < 3; k2++) {
+          mul = filter[k1 * 3 + k2] *
+                orig[(i * col_size) + j + k1 * col_size + k2];
+          temp += mul;
         }
+      }
+      sol[row + j] = temp;
     }
-    for (i = 0; i < f_size; i++) {
-        #pragma HLS PIPELINE II=1
-        filter[i] = in_stream[row_size * col_size + i];
-    }
-#endif
+  }
 
-    TYPE temp, mul;
-    temp = 0;
-
-    stencil_label1:for (i=0; i<row_size-2; i++) {
-            row = i * col_size;
-        stencil_label2:for (j=0; j<col_size-2; j++) {
-            temp = 0;
-            stencil_label3:for (k1=0;k1<3;k1++){
-                stencil_label4:for (k2=0;k2<3;k2++){
-                    mul = filter[k1*3 + k2] * orig[(i * col_size) + j + k1*col_size + k2];
-                    temp += mul;
-                }
-            }
-            sol[row + j] = temp;
-        }
+  for (i = 0; i < row_size; i++) {
+    row = i * col_size;
+    for (j = 0; j < col_size; j++) {
+#pragma HLS PIPELINE II=1
+      elem = row + j;
+      out_stream[elem] = sol[elem];
     }
-#ifdef DMA_MODE
-    dmaStore(&sol[0],8580*4*8);
-#endif
-
-#ifdef _SYNTHESIS_
-    for (i = 0; i < row_size; i++) {
-        row = i*col_size;
-        for (j = 0; j < col_size; j++) {
-            #pragma HLS PIPELINE II=1
-            elem = row+j;
-            out_stream[elem] = sol[elem];
-        }
-    }
-#endif
+  }
 }
