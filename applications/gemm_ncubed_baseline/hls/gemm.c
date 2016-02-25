@@ -29,63 +29,50 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "gemm.h"
 
-void gemm( TYPE m1[row_size * col_size * 2],
-           TYPE prod[row_size * col_size]) {
-#ifdef _SYNTHESIS_
+void gemm(TYPE m1[row_size * col_size * 2], TYPE prod[row_size * col_size]) {
 #pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
 #pragma HLS INTERFACE axis port=m1 bundle=INPUT_STREAM
 #pragma HLS INTERFACE axis port=prod bundle=OUTPUT_STREAM
-#endif
   int i, j, k, i_row, elem;
-#ifdef DMA_MODE
-  dmaLoad(&m1[0],4096*4*2*8);
-#endif
-#ifdef _SYNTHESIS_
   // Read in data sequentially (which is needed for stream IO).
   TYPE m1_inner[row_size * col_size];
   TYPE m2_inner[row_size * col_size];
   TYPE prod_inner[row_size * col_size];
   for (i = 0; i < row_size; i++) {
-    i_row = i*col_size;
+    i_row = i * col_size;
     for (j = 0; j < col_size; j++) {
-      #pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=1
       m1_inner[i_row + j] = m1[i_row + j];
     }
   }
-  for (i = row_size; i < 2*row_size; i++) {
-    i_row = i*col_size;
+  for (i = row_size; i < 2 * row_size; i++) {
+    i_row = i * col_size;
     for (j = 0; j < col_size; j++) {
-      #pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=1
       m2_inner[i_row + j] = m1[i_row + j];
     }
   }
-#else
-  #error "Not supported!"
-  #define m1_inner m1
-  #define m2_inner m2
-#endif
-    TYPE mult, k_col;
-    mult = 0;
-    k_col = 0;
-    i_row = 0;
-    outter:for(i=0;i<row_size;i++) {
-        middle:for(j=0;j<col_size;j++) {
-            i_row = i * col_size;
-            elem = i_row + j;
-            TYPE sum = 0; //prod[i_row + j];
-            inner:for(k=0;k<row_size;k++) {
+  TYPE mult, k_col;
+  mult = 0;
+  k_col = 0;
+  i_row = 0;
+outter:
+  for (i = 0; i < row_size; i++) {
+  middle:
+    for (j = 0; j < col_size; j++) {
+      i_row = i * col_size;
+      elem = i_row + j;
+      TYPE sum = 0; // prod[i_row + j];
+    inner:
+      for (k = 0; k < row_size; k++) {
 #pragma HLS PIPELINE II=1
-                k_col = k * col_size;
-                mult = m1_inner[i_row + k] * m2_inner[k_col + j];
-                sum += mult;
-            }
-            prod_inner[elem] = sum;
-        }
+        k_col = k * col_size;
+        mult = m1_inner[i_row + k] * m2_inner[k_col + j];
+        sum += mult;
+      }
+      prod_inner[elem] = sum;
     }
-#ifdef DMA_MODE
-  dmaStore(&prod[0],4096*4*8);
-#endif
-#ifdef _SYNTHESIS_
+  }
   for (i = 0; i < row_size; i++) {
     i_row = i * col_size;
     for (j = 0; j < col_size; j++) {
@@ -94,5 +81,4 @@ void gemm( TYPE m1[row_size * col_size * 2],
       prod[elem] = prod_inner[elem];
     }
   }
-#endif
 }

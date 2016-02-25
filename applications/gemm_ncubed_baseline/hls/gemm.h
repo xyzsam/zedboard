@@ -39,18 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MIN 2147483646
 #define MAX -2147483646
 
-//Set number of iterations to execute
-#define MAX_ITERATION 1
-
-#ifdef GEM5_HARNESS
-#include "gem5/aladdin_sys_connection.h"
-#include "gem5/aladdin_sys_constants.h"
-#endif
-
-#ifdef DMA_MODE
-#include "gem5/dma_interface.h"
-#endif
-
 void gemm(TYPE m1[row_size * col_size * 2], TYPE prod[row_size * col_size]);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,21 +48,9 @@ int INPUT_SIZE = sizeof(struct bench_args_t);
 void run_benchmark( void *vargs ) {
   struct bench_args_t *args = (struct bench_args_t *)vargs;
   TYPE mat[row_size * col_size * 2];
-  bool tlast = false;
-  int i, j;
-  int status = 0;
-  memset(&args->prod[0], 0, row_size*col_size*sizeof(int));
 
-#ifdef GEM5_HARNESS
-  mapArrayToAccelerator(
-      MACHSUITE_GEMM_NCUBED, "m1", (void*)&args->m1, sizeof(args->m1));
-  mapArrayToAccelerator(
-      MACHSUITE_GEMM_NCUBED, "m2", (void*)&args->m2, sizeof(args->m2));
-  mapArrayToAccelerator(
-      MACHSUITE_GEMM_NCUBED, "prod", (void*)&args->prod, sizeof(args->prod));
-  invokeAcceleratorAndBlock(MACHSUITE_GEMM_NCUBED);
-#else
-  // Add some fake data.
+#ifdef USE_SAMPLE_INPUT
+  int i, j;
   for (i = 0; i < row_size; i++) {
     for (j = 0; j < row_size; j++) {
       args->m1[i*row_size + j] = 3;
@@ -83,10 +59,11 @@ void run_benchmark( void *vargs ) {
   }
   for (i = 0; i < row_size; i++)
     args->m2[i*row_size + i] = 1;
+#endif
   memcpy(&mat[0], &args->m1[0], row_size*col_size*sizeof(TYPE));
   memcpy(&mat[row_size*col_size], &args->m2[0], row_size*col_size*sizeof(TYPE));
+  memset(&args->prod[0], 0, row_size*col_size*sizeof(int));
   gemm(mat, args->prod);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
