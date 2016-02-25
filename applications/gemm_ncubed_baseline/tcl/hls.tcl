@@ -3,7 +3,7 @@ open_project gemm_hls
 add_files -cflags "-D_SYNTHESIS_" gemm.c
 add_files input.data
 add_files check.data
-add_files -cflags "-D_SYNTHESIS_" -tb ../../common/harness.c
+add_files -cflags "-D_SYNTHESIS_" -tb ../../../common/src/machsuite_harness.c
 
 set_top gemm
 
