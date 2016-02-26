@@ -83,16 +83,4 @@ struct bench_args_t {
 };
 
 int INPUT_SIZE;
-
-/*
-void bfs_queue(uint32_t* in_stream, edge_index_t *out_stream);
-
-void run_benchmark( void *vargs ) {
-  struct bench_args_t *args = (struct bench_args_t *)vargs;
-  uint32_t *input = (uint32_t*) args;
-  uint32_t output[N_LEVELS]; //  = &(args->level_counts[0]);
-
-  bfs_queue(input, &output[0]);
-}
-*/
 ////////////////////////////////////////////////////////////////////////////////

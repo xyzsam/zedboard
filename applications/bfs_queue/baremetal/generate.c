@@ -17,10 +17,6 @@
 #define D 25
 #endif
 
-
-// Fake benchmark function to satisfy the extern
-
-void bfs_queue(uint32_t *in_stream, edge_index_t *out_stream) {}
 node_index_t adjmat[N_NODES][N_NODES]; // This is small enough to be fine.
 
 void generate_binary(struct bench_args_t *data)
