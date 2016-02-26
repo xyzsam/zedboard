@@ -13,11 +13,7 @@ int RxSetup(XAxiDma * AxiDma, struct DmaPacket * packet)
 	int Coalesce = 1;
 	int Status;
 	XAxiDma_Bd BdTemplate;
-	XAxiDma_Bd *BdCurPtr;
 	u32 BdCount;
-	u32 FreeBdCount;
-	u32 RxBufferPtr;
-	int Index;
 
 	packet->channel->RxRingPtr = XAxiDma_GetRxRing(AxiDma);
 
@@ -48,59 +44,6 @@ int RxSetup(XAxiDma * AxiDma, struct DmaPacket * packet)
 	Status = XAxiDma_BdRingClone(packet->channel->RxRingPtr, &BdTemplate);
 	if (Status != XST_SUCCESS) {
 		xil_printf("RX clone BD failed %d\r\n", Status);
-
-		return XST_FAILURE;
-	}
-
-	// Attach buffers to RxBD ring so we are ready to receive packets.
-
-	FreeBdCount = XAxiDma_BdRingGetFreeCnt(packet->channel->RxRingPtr);
-    packet->NumRxBds = FreeBdCount;
-
-	// xil_printf("Free rx bd count: %d\r\n", FreeBdCount);
-	Status = XAxiDma_BdRingAlloc(
-			packet->channel->RxRingPtr, FreeBdCount, &(packet->RxBdPtr));
-	if (Status != XST_SUCCESS) {
-		xil_printf("RX alloc BD failed %d\r\n", Status);
-
-		return XST_FAILURE;
-	}
-
-	// xil_printf("  RxBdPtr = 0x%x\r\n", packet->RxBdPtr);
-
-	BdCurPtr = packet->RxBdPtr;
-	RxBufferPtr = (u32)packet->RxBuf;
-	for (Index = 0; Index < FreeBdCount; Index++) {
-		Status = XAxiDma_BdSetBufAddr(BdCurPtr, RxBufferPtr);
-
-		if (Status != XST_SUCCESS) {
-			xil_printf("Set buffer addr %x on BD %x failed %d\r\n",
-					(unsigned int)RxBufferPtr,
-					(unsigned int)BdCurPtr, Status);
-			return XST_FAILURE;
-		}
-
-		Status = XAxiDma_BdSetLength(BdCurPtr, MAX_PKT_LEN,
-				packet->channel->RxRingPtr->MaxTransferLen);
-		if (Status != XST_SUCCESS) {
-			xil_printf("Rx set length %d on BD %x failed %d\r\n",
-					MAX_PKT_LEN, (unsigned int)BdCurPtr, Status);
-			return XST_FAILURE;
-		}
-
-		// Receive BDs do not need to set anything for the control
-		// The hardware will set the SOF/EOF bits per stream status
-		XAxiDma_BdSetCtrl(BdCurPtr, 0);
-		XAxiDma_BdSetId(BdCurPtr, RxBufferPtr);
-
-		RxBufferPtr += MAX_PKT_LEN;
-		BdCurPtr = XAxiDma_BdRingNext(packet->channel->RxRingPtr, BdCurPtr);
-	}
-
-	Status = XAxiDma_BdRingToHw(packet->channel->RxRingPtr, FreeBdCount,
-			packet->RxBdPtr);
-	if (Status != XST_SUCCESS) {
-		xil_printf("RX submit hw failed %d\r\n", Status);
 
 		return XST_FAILURE;
 	}
@@ -182,34 +125,92 @@ int TxSetup(XAxiDma * AxiDma, struct DmaChannel * channel)
 	return XST_SUCCESS;
 }
 
-/*****************************************************************************/
-/**
- *
- * This function prepares a buffer descriptor for one packet to be sent
- * non-blockingly through the DMA engine.
- *
- * @param	AxiDmaInstPtr points to the DMA engine instance
- *
- * @return	- XST_SUCCESS if the BD is formed successfully.
- *		- XST_FAILURE otherwise.
- *
- * @note     None.
- *
- ******************************************************************************/
 int PreparePacket(struct DmaPacket *packet)
 {
-	int Status;
+  int Status;
   int i;
   int cycle_start, cycle_end;
-  u32 TxBufferPtr;
+  u32 TxBufferPtr, RxBufferPtr;
+  int last_bd_size, num_bds;
+  int mask;
   XAxiDma_Bd *BdCurPtr;
 
+	/////////////////////////////// RX //////////////////////////////
+
   cycle_start = get_cyclecount();
-  int last_bd_size = packet->TxNumBytes % MAX_PKT_LEN;
-  int num_bds = packet->TxNumBytes / MAX_PKT_LEN;
+  	last_bd_size = packet->RxNumBytes % MAX_PKT_LEN;
+  	num_bds = packet->RxNumBytes / MAX_PKT_LEN;
+  	if (last_bd_size > 0)
+  		num_bds++;
+      packet->NumRxBds = num_bds;
+
+  	// xil_printf("Free rx bd count: %d\r\n", FreeBdCount);
+
+
+  	Status = XAxiDma_BdRingAlloc(
+  			packet->channel->RxRingPtr, packet->NumRxBds, &(packet->RxBdPtr));
+  	if (Status != XST_SUCCESS) {
+  		xil_printf("RX alloc BD failed %d\r\n", Status);
+
+  		return XST_FAILURE;
+  	}
+
+  	// xil_printf("  RxBdPtr = 0x%x\r\n", packet->RxBdPtr);
+
+  	BdCurPtr = packet->RxBdPtr;
+  	RxBufferPtr = (u32)packet->RxBuf;
+  	for (i = 0; i < packet->NumRxBds; i++) {
+  		Status = XAxiDma_BdSetBufAddr(BdCurPtr, RxBufferPtr);
+
+  		if (Status != XST_SUCCESS) {
+  			xil_printf("Set buffer addr %x on BD %x failed %d\r\n",
+  					(unsigned int)RxBufferPtr,
+  					(unsigned int)BdCurPtr, Status);
+  			return XST_FAILURE;
+  		}
+
+  		if (i != packet->NumRxBds - 1) {
+  			Status = XAxiDma_BdSetLength(BdCurPtr, MAX_PKT_LEN,
+  							packet->channel->RxRingPtr->MaxTransferLen);
+  		} else {
+  			Status = XAxiDma_BdSetLength(BdCurPtr, last_bd_size,
+  							packet->channel->RxRingPtr->MaxTransferLen);
+  		}
+
+  		if (Status != XST_SUCCESS) {
+  			xil_printf("Rx set length %d on BD %x failed %d\r\n",
+  					MAX_PKT_LEN, (unsigned int)BdCurPtr, Status);
+  			return XST_FAILURE;
+  		}
+
+  		// Receive BDs do not need to set anything for the control
+  		// The hardware will set the SOF/EOF bits per stream status
+  		XAxiDma_BdSetCtrl(BdCurPtr, 0);
+  		XAxiDma_BdSetId(BdCurPtr, RxBufferPtr);
+
+  		RxBufferPtr += MAX_PKT_LEN;
+  		BdCurPtr = XAxiDma_BdRingNext(packet->channel->RxRingPtr, BdCurPtr);
+  	}
+
+  	Status = XAxiDma_BdRingToHw(packet->channel->RxRingPtr, packet->NumRxBds,
+  			packet->RxBdPtr);
+  	if (Status != XST_SUCCESS) {
+  		xil_printf("RX submit hw failed %d\r\n", Status);
+
+  		return XST_FAILURE;
+  	}
+
+  	cycle_end = get_cyclecount();
+  	rx_prepare = cycle_end - cycle_start;
+
+  	/////////////////////////////// TX //////////////////////////////
+
+
+  cycle_start = get_cyclecount();
+  last_bd_size = packet->TxNumBytes % MAX_PKT_LEN;
+  num_bds = packet->TxNumBytes / MAX_PKT_LEN;
   if (last_bd_size > 0)
 	  num_bds++;
-  int mask;
 
 	/* Allocate a BD */
 	Status = XAxiDma_BdRingAlloc(
@@ -274,6 +275,7 @@ int PreparePacket(struct DmaPacket *packet)
 
 	cycle_end = get_cyclecount();
 	tx_prepare = cycle_end - cycle_start;
+
 	return XST_SUCCESS;
 }
 
