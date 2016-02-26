@@ -3,7 +3,7 @@ open_project gemm_hls
 add_files gemm.c
 add_files input.data
 add_files check.data
-add_files -tb ../../../common/src/machsuite_harness.c
+add_files -tb -cflags "-DHLS_TB" ../../../common/src/machsuite_harness.c
 
 set_top gemm
 

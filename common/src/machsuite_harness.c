@@ -8,6 +8,8 @@
 extern int INPUT_SIZE;
 void run_benchmark( void *args );
 
+#ifdef HLS_TB
+
 int main(int argc, char **argv)
 {
   int status;
@@ -67,3 +69,5 @@ int main(int argc, char **argv)
   printf("Success.\n");
   return 0;
 }
+
+#endif

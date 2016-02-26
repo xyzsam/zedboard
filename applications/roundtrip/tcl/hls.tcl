@@ -1,7 +1,7 @@
 open_project roundtrip_syn
 
 add_files -cflags "-D_SYNTHESIS_" roundtrip.c
-add_files -cflags "-D_SYNTHESIS_" -tb roundtrip.c
+add_files -cflags "-D_SYNTHESIS_ -DHLS_TB" -tb roundtrip.c
 
 set_top roundtrip
 
