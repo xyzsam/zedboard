@@ -178,7 +178,7 @@ int main() {
   init_bfs_queue(&bfs_queue_device, XPAR_XBFS_QUEUE_0_DEVICE_ID);
   XBfs_queue_Start(&bfs_queue_device);
   cycle_end = get_cyclecount();
-  bfs_queue_init = cycle_end - cycle_start;
+  accel_init = cycle_end - cycle_start;
 
   // printf("Initializing input and output arrays\r\n");
   cycle_start = get_cyclecount();
@@ -209,7 +209,7 @@ int main() {
     counter++;
   }
   cycle_end = get_cyclecount();
-  bfs_queue_runtime = cycle_end - cycle_start;
+  accel_runtime = cycle_end - cycle_start;
 
   cycle_start = get_cyclecount();
   num_failures = 0;
@@ -244,8 +244,8 @@ int main() {
   xil_printf("-RX preparing %d BDs: %d\r\n", packet.NumRxBds, rx_prepare);
   xil_printf("-TX preparing %d BDs: %d\r\n", packet.NumTxBds, tx_prepare);
   xil_printf("Prepare data: %d\r\n", prepare_data);
-  xil_printf("BFS init: %d\r\n", bfs_queue_init);
-  xil_printf("BFS runtime: %d, spun %d times\r\n", bfs_queue_runtime, counter);
+  xil_printf("BFS init: %d\r\n", accel_init);
+  xil_printf("BFS runtime: %d, spun %d times\r\n", accel_runtime, counter);
   xil_printf("Output check: %d\r\n", check_time);
   xil_printf("Total runtime: %d\r\n", total_runtime);
 
