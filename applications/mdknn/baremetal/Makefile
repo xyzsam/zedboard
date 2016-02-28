@@ -1,7 +1,7 @@
 .PHONY: all hls
 
 TOPLEVEL = $(CURDIR)/../../..
-SRCS = mdknn.c generate.c local_support.c platform.c
+SRCS = mdknn.c generate.c platform.c
 
 CPPFLAGS +=
 CFLAGS += -O3 $(CPPFLAGS)
