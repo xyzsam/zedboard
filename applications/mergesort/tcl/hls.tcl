@@ -3,7 +3,7 @@ open_project merge_syn
 add_files merge.c
 add_files input.data
 add_files check.data
-add_files -tb ../../common/harness.c
+add_files -tb ../../../common/src/harness.c
 
 set_top mergesort
 

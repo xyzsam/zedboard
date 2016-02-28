@@ -9,7 +9,7 @@
 
 #include "merge.h"
 // Fake benchmark function to satisfy the extern
-void mergesort(int a[size]) { }
+void mergesort(int *in_stream, int *out_stream) {}
 
 void generate_binary()
 {
@@ -19,7 +19,7 @@ void generate_binary()
 
   // Fill data structure
   srandom(1);
-  for(i=0; i<size; i++){
+  for(i=0; i<NUM; i++){
     data.a[i] = random();
   }
 
