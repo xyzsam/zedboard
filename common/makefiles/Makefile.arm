@@ -20,8 +20,12 @@ endif
 ifeq ($(HW_PLATFORM),)
 	$(error Need to define location of hardware platform specification!)
 endif
+ifeq ($(TOPLEVEL),)
+	$(error Need to define the top level directory of your repository!)
+endif
 
 # Drivers and utility functions
+include $(TOPLEVEL)/common/src/Makefile
 BSP_LIBS = $(BSP_HOME)/ps7_cortexa9_0/lib
 BSP_LIBSRC = $(BSP_HOME)/ps7_cortexa9_0/libsrc
 BSP_LIBSRC_PL = $(BSP_LIBSRC)/$(PL_NAME)/src
@@ -32,7 +36,7 @@ WARNINGS = -Wall -Wno-unused-label
 COMMON_DIR = $(TOPLEVEL)/common/src
 XDMA_DIR = /group/vlsiarch/samxi/active_projects/xilinx/modules/zynq-xdma
 
-COMMON_SRCS = $(wildcard $(COMMON_DIR)/*.c)
+EXP_COMMON_SRCS = $(patsubst %.c, $(COMMON_DIR)/%.c, $(COMMON_SRCS))
 CPPFLAGS += -I$(COMMON_DIR) -I$(BSP_LIBSRC_PL) -I$(BSP_BAREMETAL_INC) -I$(XDMA_DIR)
 ifeq ($(ZYNQ_ENABLE),1)
 CPPFLAGS += -DZYNQ
@@ -49,7 +53,7 @@ cpu:
 	$(MAKE) -C . $(BIN)-arm "ZYNQ_ENABLE=0"
 	mv $(BIN)-arm $(BIN)-cpu
 
-$(BIN)-arm: $(SRCS) $(BSP_LIBSRC_PL_SRCS) $(COMMON_SRCS)
+$(BIN)-arm: $(SRCS) $(BSP_LIBSRC_PL_SRCS) $(EXP_COMMON_SRCS)
 	$(CROSS_COMPILE)gcc $(ARM_CFLAGS) -o $(BIN)-arm $^ $(ARM_LFLAGS)
 
 clean-arm:
