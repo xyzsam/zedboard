@@ -61,6 +61,8 @@ struct DmaPacket {
   struct DmaChannel *channel;
 };
 
+void InitPacket(struct DmaPacket* packet, struct DmaChannel *channel);
+int InitDma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id);
 int RxSetup(XAxiDma * AxiDmaInstPtr, struct DmaPacket * packet);
 int TxSetup(XAxiDma * AxiDmaInstPtr, struct DmaChannel * channel);
 int WaitForCompletion(struct DmaPacket* packet, int* ProcessedBdCount, bool interrupts);

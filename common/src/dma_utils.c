@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include "xaxidma.h"
 #include "dma_utils.h"
 #include "interrupts.h"
@@ -6,6 +7,41 @@
 #include "profiling.h"
 
 u32 *Packet = (u32 *) TX_BUFFER_BASE;
+
+void InitPacket(struct DmaPacket* packet, struct DmaChannel *channel) {
+	packet->TxBuf = (u8*) TX_BUFFER_BASE;
+	packet->RxBuf = (u8*) RX_BUFFER_BASE;
+	packet->channel = channel;
+}
+
+int InitDma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id) {
+  int status = 0;
+  XAxiDma_Config *config;
+  config = XAxiDma_LookupConfig(dma_device_id);
+  if (!config) {
+	  printf("Failed to lookup DMA config.\r\n");
+	  return -1;
+  }
+  status = XAxiDma_CfgInitialize(dma_device, config);
+  if (status != XST_SUCCESS) {
+    xil_printf("Failed to initialize device with error %d\r\n", status);
+    return -1;
+  }
+
+  XAxiDma_Reset(dma_device);
+  while (!XAxiDma_ResetIsDone(dma_device)) {}
+  XAxiDma_IntrEnable(dma_device,
+                     (XAXIDMA_IRQ_IOC_MASK | XAXIDMA_IRQ_ERROR_MASK),
+                     XAXIDMA_DMA_TO_DEVICE);
+  XAxiDma_IntrEnable(dma_device,
+                     (XAXIDMA_IRQ_IOC_MASK | XAXIDMA_IRQ_ERROR_MASK),
+                     XAXIDMA_DEVICE_TO_DMA);
+
+  g_dma_err = 0;
+  g_mm2s_done = 0;
+  g_s2mm_done = 0;
+  return 0;
+}
 
 int RxSetup(XAxiDma * AxiDma, struct DmaPacket * packet)
 {

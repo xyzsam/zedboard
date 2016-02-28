@@ -1,7 +1,7 @@
 .PHONY: all hls
 
 TOPLEVEL = $(CURDIR)/../../..
-SRCS = dma_utils.c gemm.c interrupts.c profiling.c platform.c
+SRCS = gemm.c platform.c
 
 CPPFLAGS +=
 CFLAGS += -O3 $(CPPFLAGS)

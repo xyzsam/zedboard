@@ -25,35 +25,6 @@
 static XViterbi viterbi_device;
 static XAxiDma dma_device;
 
-int init_dma(XAxiDma* dma_device, struct DmaChannel * channel, int dma_device_id) {
-  int status = 0;
-  XAxiDma_Config *config;
-  config = XAxiDma_LookupConfig(dma_device_id);
-  if (!config) {
-	  printf("Failed to lookup DMA config.\r\n");
-	  return -1;
-  }
-  status = XAxiDma_CfgInitialize(dma_device, config);
-  if (status != XST_SUCCESS) {
-    xil_printf("Failed to initialize device with error %d\r\n", status);
-    return -1;
-  }
-
-  XAxiDma_Reset(dma_device);
-  while (!XAxiDma_ResetIsDone(dma_device)) {}
-  XAxiDma_IntrEnable(dma_device,
-                     (XAXIDMA_IRQ_IOC_MASK | XAXIDMA_IRQ_ERROR_MASK),
-                     XAXIDMA_DMA_TO_DEVICE);
-  XAxiDma_IntrEnable(dma_device,
-                     (XAXIDMA_IRQ_IOC_MASK | XAXIDMA_IRQ_ERROR_MASK),
-                     XAXIDMA_DEVICE_TO_DMA);
-
-  g_dma_err = 0;
-  g_mm2s_done = 0;
-  g_s2mm_done = 0;
-  return 0;
-}
-
 int init_viterbi(XViterbi* viterbi_device, int viterbi_device_id) {
   int status = 0;
   status = XViterbi_Initialize(viterbi_device, viterbi_device_id);
@@ -62,60 +33,6 @@ int init_viterbi(XViterbi* viterbi_device, int viterbi_device_id) {
     return -1;
   }
   return 0;
-}
-
-int init_intc(XScuGic* int_device, XAxiDma* dma_device, int int_device_id, int s2mm_intr_id, int mm2s_intr_id) {
-  XScuGic_Config* cfg;
-  int status = 0;
-
-  cfg = XScuGic_LookupConfig(int_device_id);
-  if (!cfg) {
-    xil_printf("No hardware config found for interrupt controller id %d\r\n", int_device_id);
-    return -1;
-  }
-
-  status = XScuGic_CfgInitialize(int_device, cfg, cfg->CpuBaseAddress);
-  if (status != XST_SUCCESS) {
-    xil_printf("Failed to initialize interrupt controller with status %d\r\n", status);
-    return -1;
-  }
-
-  // Set interrupt priorities and trigger type
-  XScuGic_SetPriorityTriggerType(int_device, s2mm_intr_id, 0xA0, 0x3);
-  XScuGic_SetPriorityTriggerType(int_device, mm2s_intr_id, 0xA8, 0x3);
-
-  // Connect handlers
-  status = XScuGic_Connect(int_device, s2mm_intr_id, (Xil_InterruptHandler)s2mm_isr, dma_device);
-  if (status != XST_SUCCESS)
-  {
-    xil_printf("ERROR! Failed to connect s2mm_isr to the interrupt controller.\r\n", status);
-    return -1;
-  }
-  status = XScuGic_Connect(int_device, mm2s_intr_id, (Xil_InterruptHandler)mm2s_isr, dma_device);
-  if (status != XST_SUCCESS)
-  {
-    xil_printf("ERROR! Failed to connect mm2s_isr to the interrupt controller.\r\n", status);
-    return -1;
-  }
-
-  // Enable all interrupts
-  XScuGic_Enable(int_device, s2mm_intr_id);
-  XScuGic_Enable(int_device, mm2s_intr_id);
-
-  // Initialize exception table and register the interrupt controller handler with exception table
-  Xil_ExceptionInit();
-  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, int_device);
-
-  // Enable non-critical exceptions
-  Xil_ExceptionEnable();
-
-  return 0;
-}
-
-void init_packet(struct DmaPacket* packet, struct DmaChannel *channel) {
-	packet->TxBuf = (u8*) TX_BUFFER_BASE;
-	packet->RxBuf = (u8*) RX_BUFFER_BASE;
-	packet->channel = channel;
 }
 
 void init_arrays(int* in) {
@@ -139,11 +56,11 @@ int main()
   init_platform();
   init_perfcounters(1,0);
 
-  init_packet(&packet, &channel);
+  InitPacket(&packet, &channel);
 
   cycle_start = get_cyclecount();
   all_start = cycle_start;
-  init_dma(&dma_device, &channel, XPAR_AXIDMA_0_DEVICE_ID);
+  InitDma(&dma_device, &channel, XPAR_AXIDMA_0_DEVICE_ID);
   status = TxSetup(&dma_device, &channel);
   CHECK_STATUS_AND_QUIT(status, "tx setup");
   status = RxSetup(&dma_device, &packet);

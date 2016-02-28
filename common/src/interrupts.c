@@ -7,6 +7,55 @@ int g_dma_err;
 int g_mm2s_done;
 int g_s2mm_done;
 
+int init_intc(XScuGic* int_device, XAxiDma* dma_device,
+              int int_device_id, int s2mm_intr_id, int mm2s_intr_id) {
+  XScuGic_Config* cfg;
+  int status = 0;
+
+  cfg = XScuGic_LookupConfig(int_device_id);
+  if (!cfg) {
+    xil_printf("No hardware config found for interrupt controller id %d\r\n", int_device_id);
+    return -1;
+  }
+
+  status = XScuGic_CfgInitialize(int_device, cfg, cfg->CpuBaseAddress);
+  if (status != XST_SUCCESS) {
+    xil_printf("Failed to initialize interrupt controller with status %d\r\n", status);
+    return -1;
+  }
+
+  // Set interrupt priorities and trigger type
+  XScuGic_SetPriorityTriggerType(int_device, s2mm_intr_id, 0xA0, 0x3);
+  XScuGic_SetPriorityTriggerType(int_device, mm2s_intr_id, 0xA8, 0x3);
+
+  // Connect handlers
+  status = XScuGic_Connect(int_device, s2mm_intr_id, (Xil_InterruptHandler)s2mm_isr, dma_device);
+  if (status != XST_SUCCESS)
+  {
+    xil_printf("ERROR! Failed to connect s2mm_isr to the interrupt controller.\r\n", status);
+    return -1;
+  }
+  status = XScuGic_Connect(int_device, mm2s_intr_id, (Xil_InterruptHandler)mm2s_isr, dma_device);
+  if (status != XST_SUCCESS)
+  {
+    xil_printf("ERROR! Failed to connect mm2s_isr to the interrupt controller.\r\n", status);
+    return -1;
+  }
+
+  // Enable all interrupts
+  XScuGic_Enable(int_device, s2mm_intr_id);
+  XScuGic_Enable(int_device, mm2s_intr_id);
+
+  // Initialize exception table and register the interrupt controller handler with exception table
+  Xil_ExceptionInit();
+  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, int_device);
+
+  // Enable non-critical exceptions
+  Xil_ExceptionEnable();
+
+  return 0;
+}
+
 // Private functions
 void s2mm_isr(void* CallbackRef)
 {
