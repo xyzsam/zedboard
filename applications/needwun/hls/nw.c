@@ -10,39 +10,6 @@
 
 #define MAX(A,B) ( ((A)>(B))?(A):(B) )
 
-void needwun(char * in_stream, char * out_stream) {
-#pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
-#pragma HLS INTERFACE axis bundle=INPUT_STREAM depth=256 port=in_stream
-#pragma HLS INTERFACE axis bundle=OUTPUT_STREAM depth=512 port=out_stream
-  int i;
-  char SEQA[ALEN];
-  char SEQB[BLEN];
-  char alignedA[ALEN + BLEN];
-  char alignedB[ALEN + BLEN];
-  int M[(ALEN + 1) * (BLEN + 1)];
-  char ptr[(ALEN + 1) * (BLEN + 1)];
-
-  for (i = 0; i < ALEN; i++) {
-#pragma HLS PIPELINE II=1
-    SEQA[i] = in_stream[i];
-  }
-  for (i = 0; i < BLEN; i++) {
-#pragma HLS PIPELINE II=1
-    SEQB[i] = in_stream[i+ALEN];
-  }
-
-  needwun_kernel(SEQA, SEQB, alignedA, alignedB, M, ptr);
-
-  for (i = 0; i < ALEN+BLEN; i++) {
-#pragma HLS PIPELINE II=1
-    out_stream[i] = alignedA[i];
-  }
-  for (i = 0; i < ALEN+BLEN; i++) {
-#pragma HLS PIPELINE II=1
-    out_stream[i+ALEN+BLEN] = alignedB[i];
-  }
-}
-
 void needwun_kernel(char SEQA[ALEN], char SEQB[BLEN],
              char alignedA[ALEN+BLEN], char alignedB[ALEN+BLEN],
              int M[(ALEN+1)*(BLEN+1)], char ptr[(ALEN+1)*(BLEN+1)]){
@@ -121,4 +88,55 @@ void needwun_kernel(char SEQA[ALEN], char SEQB[BLEN],
     pad_b: for( ; b_str_idx<ALEN+BLEN; b_str_idx++ ) {
       alignedB[b_str_idx] = '_';
     }
+}
+
+void needwun(int32_t * in_stream, int32_t * out_stream) {
+#pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
+#pragma HLS INTERFACE axis bundle=INPUT_STREAM depth=64 port=in_stream
+#pragma HLS INTERFACE axis bundle=OUTPUT_STREAM depth=128 port=out_stream
+  int i, j;
+  int32_t temp;
+  char SEQA[ALEN];
+  char SEQB[BLEN];
+  char alignedA[ALEN + BLEN];
+  char alignedB[ALEN + BLEN];
+  int M[(ALEN + 1) * (BLEN + 1)];
+  char ptr[(ALEN + 1) * (BLEN + 1)];
+
+  for (i = 0; i < ALEN; i+=4) {
+#pragma HLS PIPELINE II=1
+    temp = in_stream[i/4];
+    for (j = 0; j < 4; j++) {
+#pragma HLS UNROLL
+      SEQA[i+j] = (temp >> (j*8)) & 0xff;
+    }
+  }
+  for (i = 0; i < BLEN; i+=4) {
+#pragma HLS PIPELINE II=1
+    temp = in_stream[(i+ALEN)/4];
+    for (j = 0; j < 4; j++) {
+      SEQB[i+j] = (temp >> (j*8)) & 0xff;
+    }
+  }
+
+  needwun_kernel(SEQA, SEQB, alignedA, alignedB, M, ptr);
+
+  for (i = 0; i < ALEN+BLEN; i+=4) {
+#pragma HLS PIPELINE II=1
+    temp = 0;
+    for (j = 0; j < 4; j++) {
+#pragma HLS UNROLL
+      temp |= (alignedA[i+j] << (j*8));
+    }
+    out_stream[i/4] = temp;
+  }
+  for (i = 0; i < ALEN+BLEN; i+=4) {
+#pragma HLS PIPELINE II=1
+    temp = 0;
+    for (j = 0; j < 4; j++) {
+#pragma HLS UNROLL
+      temp |= (alignedB[i+j] << (j*8));
+    }
+    out_stream[(i+ALEN+BLEN)/4] = temp;
+  }
 }

@@ -5,9 +5,13 @@ int INPUT_SIZE = sizeof(struct bench_args_t);
 
 void run_benchmark_axi(void *vargs) {
   struct bench_args_t *args = (struct bench_args_t *)vargs;
-  char* in_stream = &(args->seqA[0]);
-  char* out_stream = &(args->alignedA[0]);
-  needwun(in_stream, out_stream);
+  int32_t in_stream[(ALEN+BLEN)/4];
+  int32_t out_stream[2*(ALEN+BLEN)/4];
+  memcpy(&in_stream[0], &args->seqA[0], ALEN+BLEN);
+
+  needwun(&in_stream[0], &out_stream[0]);
+
+  memcpy(&args->alignedA[0], &out_stream[0], 2*(ALEN+BLEN));
 }
 
 void run_benchmark( void *vargs ) {

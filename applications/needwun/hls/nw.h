@@ -5,7 +5,7 @@
 #define ALEN 128
 #define BLEN 128
 
-void needwun(char * in_stream, char * out_stream);
+void needwun(int32_t * in_stream, int32_t * out_stream);
 void needwun_kernel(char SEQA[ALEN], char SEQB[BLEN],
              char alignedA[ALEN+BLEN], char alignedB[ALEN+BLEN],
              int M[(ALEN+1)*(BLEN+1)], char ptr[(ALEN+1)*(BLEN+1)]);
