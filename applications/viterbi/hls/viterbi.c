@@ -47,10 +47,13 @@ int viterbi(float *in_stream) {
 #pragma HLS PIPELINE II=1
     Obs[i] = (int)in_stream[i];
   for (i = 0; i < numStates*numObs; i++)
+#pragma HLS PIPELINE II=1
     transMat[i] = in_stream[i + numObs];
   for (i = 0; i < numStates*numObs; i++)
+#pragma HLS PIPELINE II=1
     obsLik[i] = in_stream[i + numObs + numStates*numObs];
   for (i = 0; i < numStates*numObs; i++)
+#pragma HLS PIPELINE II=1
     v[i] = in_stream[i + numObs + 2*numStates*numObs];
 
     v[0] = 1.0;
