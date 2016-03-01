@@ -34,10 +34,9 @@ BSP_BAREMETAL_INC = $(BSP_HOME)/ps7_cortexa9_0/include
 HW_PLATFORM_INC = $(HW_PLATFORM)/drivers/$(PL_NAME)/src
 WARNINGS = -Wall -Wno-unused-label
 COMMON_DIR = $(TOPLEVEL)/common/src
-XDMA_DIR = /group/vlsiarch/samxi/active_projects/xilinx/modules/zynq-xdma
 
 EXP_COMMON_SRCS = $(patsubst %.c, $(COMMON_DIR)/%.c, $(COMMON_SRCS))
-CPPFLAGS += -I$(COMMON_DIR) -I$(BSP_LIBSRC_PL) -I$(BSP_BAREMETAL_INC) -I$(XDMA_DIR)
+CPPFLAGS += -I$(COMMON_DIR) -I$(BSP_LIBSRC_PL) -I$(BSP_BAREMETAL_INC)
 ifeq ($(ZYNQ_ENABLE),1)
 CPPFLAGS += -DZYNQ
 endif
