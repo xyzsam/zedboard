@@ -1,13 +1,13 @@
 KERN=fft
 ALG=transpose
 
-CFLAGS?=-O3 -Wall -Wno-unused-label
+CFLAGS?=-std=c99 -O3 -Wall -Wno-unused-label
 
 SRCS=$(KERN).c local_support.c ../../../common/src/support.c
 FILES=$(SRCS) $(KERN).h ../../../common/src/support.h
 
-$(KERN): $(FILES) ../../../common/src/harness.c
-	$(CC) $(CFLAGS) -I../../../common/src -o $(KERN) $(SRCS) ../../../common/src/harness.c -lm
+$(KERN): $(FILES) ../../../common/src/machsuite_new_harness.c
+	$(CC) $(CFLAGS) -I../../../common/src -o $(KERN) $(SRCS) ../../../common/src/machsuite_new_harness.c -lm
 
 run: $(KERN) input.data check.data
 	./$(KERN) input.data check.data

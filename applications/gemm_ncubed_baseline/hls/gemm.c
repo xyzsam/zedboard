@@ -56,7 +56,7 @@ void gemm(TYPE m1[row_size * col_size * 2], TYPE prod[row_size * col_size]) {
   mult = 0;
   k_col = 0;
   i_row = 0;
-outter:
+outer:
   for (i = 0; i < row_size; i++) {
   middle:
     for (j = 0; j < col_size; j++) {

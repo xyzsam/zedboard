@@ -41,7 +41,8 @@ char *readfile(int fd) {
   assert(0==fstat(fd, &s) && "Couldn't determine file size");
   len = s.st_size;
   assert(len>0 && "File is empty");
-  p = (char *)malloc(len);
+  p = (char *)malloc(len+1);
+  p[len] = 0;
   bytes_read = 0;
   while( bytes_read<len ) {
     status = read(fd, &p[bytes_read], len-bytes_read);

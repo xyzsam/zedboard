@@ -47,8 +47,8 @@ edge_index_t level_counts[N_LEVELS];
 
 void bfs_queue(uint32_t *in_stream, edge_index_t *out_stream) {
 #pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
-#pragma HLS INTERFACE axis bundle=INPUT_STREAM port=in_stream
-#pragma HLS INTERFACE axis bundle=OUTPUT_STREAM port=out_stream
+#pragma HLS INTERFACE axis bundle=INPUT_STREAM depth=4764 port=in_stream
+#pragma HLS INTERFACE axis bundle=OUTPUT_STREAM depth=40 port=out_stream
 
   uint32_t byte_buf;
 

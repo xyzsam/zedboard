@@ -1,5 +1,6 @@
 #set_directive_allocation -limit 8 -type operation fft1D_512 Mul
-#set_directive_allocation -limit 64 -type operation fft1D_512 Add
+#set_directive_allocation -limit 128 -type operation fft1D_512 Add
+#config_bind -effort high -min_op add
 
 set_directive_resource -core RAM_1P_BRAM "fft1D_512" work_x
 set_directive_resource -core RAM_1P_BRAM "fft1D_512" work_y
@@ -30,6 +31,8 @@ set_directive_resource -core RAM_1P_BRAM "fft1D_512" smem
 #set_directive_pipeline fft1D_512/loop9
 #set_directive_pipeline fft1D_512/loop10
 #set_directive_pipeline fft1D_512/loop11
+#set_directive_pipeline fft1D_512/twiddle_512
+#set_directive_pipeline fft1D_512/twiddle_64
 
 #set_directive_unroll -factor 2 fft1D_512/loop1
 #set_directive_unroll -factor 2 fft1D_512/loop2
@@ -42,3 +45,4 @@ set_directive_resource -core RAM_1P_BRAM "fft1D_512" smem
 #set_directive_unroll -factor 2 fft1D_512/loop9
 #set_directive_unroll -factor 2 fft1D_512/loop10
 #set_directive_unroll -factor 2 fft1D_512/loop11
+#set_directive_loop_flatten twiddles8/twiddle_loop

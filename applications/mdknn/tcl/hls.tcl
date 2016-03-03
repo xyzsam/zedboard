@@ -4,7 +4,7 @@ add_files -cflags "-I../../../common/src" md.c
 add_files -cflags "-I../../../common/src" local_support.c
 add_files input.data
 add_files check.data
-add_files -tb ../../common/src/machsuite_new_harness.c
+add_files -tb ../../../common/src/machsuite_new_harness.c
 add_files ../../../common/src/support.c
 
 set_top mdknn
