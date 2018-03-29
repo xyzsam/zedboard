@@ -1,7 +1,8 @@
 KERN=spmv
 ALG=crs
 
-CFLAGS?=-DZYNQ -O3 -Wall -Wno-unused-label
+CC = /group/guyeon/cktcad/tools/xilinx/Vivado_HLS/2015.1/lnx64/tools/gcc/bin/gcc
+CFLAGS?=-DZYNQ -O3 -Wall -Wno-unused-label -g
 
 SRCS=$(KERN).c local_support.c ../../../common/src/support.c
 FILES=$(SRCS) $(KERN).h ../../../common/src/support.h

@@ -11,10 +11,16 @@ http://www.cs.berkeley.edu/~mhoemmen/matrix-seminar/slides/UCB_sparse_tutorial_1
 #define NNZ 1666
 #define N 494
 
+union data_t {
+  unsigned int bits;
+  float fp;
+};
+
 #define TYPE float
+#define STREAM_TYPE union data_t
 
 #ifdef ZYNQ
-void spmv(TYPE* in_stream, TYPE* out_stream);
+void spmv(STREAM_TYPE* in_stream, STREAM_TYPE* out_stream);
 #endif
 
 void spmv_kernel(TYPE val[NNZ], int32_t cols[NNZ], int32_t rowDelimiters[N + 1],
@@ -31,9 +37,9 @@ struct bench_args_t {
 };
 
 struct bench_args_float_t {
-  TYPE val[NNZ];
-  TYPE cols[NNZ];
-  TYPE rowDelimiters[N+1];
-  TYPE vec[N];
-  TYPE out[N];
+  STREAM_TYPE val[NNZ];
+  STREAM_TYPE cols[NNZ];
+  STREAM_TYPE rowDelimiters[N+1];
+  STREAM_TYPE vec[N];
+  STREAM_TYPE out[N];
 };

@@ -12,13 +12,13 @@ add_files -cflags "-DZYNQ -I../../../common/src" -tb ../../../common/src/machsui
 # set_top aes256_encrypt_ecb
 set_top aes
 
-open_solution -reset solution
+open_solution -reset solution_baseline
 set_part {xc7z020clg484-1}
 create_clock -period 10
-source ./aes_dir
+#source ./aes_dir
 config_rtl -reset all -reset_level low
 csynth_design
 #cosim_design -rtl verilog -tool modelsim -trace_level all
-export_design -format ip_catalog
+#export_design -format ip_catalog
 
 exit

@@ -1,6 +1,7 @@
 #select memory resources
 set_directive_resource -core RAM_1P_BRAM "mergesort" a
 set_directive_resource -core RAM_1P_BRAM "merge" a
+set_directive_resource -core RAM_1P_BRAM "merge" temp
 
 set_directive_interface -depth 128 "mergesort" in_stream
 set_directive_interface -depth 128 "mergesort" out_stream

@@ -8,6 +8,9 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+
+// typedef float (*strtof_t)(const char*, char**);
 
 // In general, fd_printf is used for individual values.
 #define SUFFICIENT_SPRINTF_SPACE 256
@@ -32,7 +35,7 @@ static inline int fd_printf(int fd, const char *format, ...) {
 
 ///// File and section functions
 char *readfile(int fd) {
-  char *p; 
+  char *p;
   struct stat s;
   off_t len;
   ssize_t bytes_read, status;
@@ -138,8 +141,43 @@ generate_parse_TYPE_array(int16_t, strtol_10)
 generate_parse_TYPE_array(int32_t, strtol_10)
 generate_parse_TYPE_array(int64_t, strtol_10)
 
-generate_parse_TYPE_array(float, strtof)
+// generate_parse_TYPE_array(float, strtof)
 generate_parse_TYPE_array(double, strtod)
+
+int parse_float_array(char *s, float *arr, int n) {
+  char *line, *endptr;
+  int i=0;
+  float v;
+
+  assert(s!=NULL && "Invalid input string");
+
+  line = strtok(s,"\n");
+  while( line!=NULL && i<n ) {
+    endptr = line;
+    /*errno=0;*/
+    v = (float)(atof(line));
+    printf("Converted %s to %2.8f\n", line, v);
+    /*
+    if( (*endptr)!=(char)0 ) {
+      fprintf(stderr, "Invalid input: line %d of section\n", i);
+    }
+      */
+    /*assert((*endptr)==(char)0 && "Invalid input character"); */
+    /*if( errno!=0 ) {
+      fprintf(stderr, "Couldn't convert string "%s": line %d of sectionn", line, i);
+    }*/
+    /*assert(errno==0 && "Couldn't convert the string"); */
+    arr[i] = v;
+    i++;
+    line[strlen(line)] = '\n'; /* Undo the strtok replacement.*/
+    line = strtok(NULL,"\n");
+  }
+  if(line!=NULL) { /* stopped because we read all the things */
+    line[strlen(line)] = '\n'; /* Undo the strtok replacement.*/
+  }
+
+  return 0;
+}
 
 ///// Array write functions
 int write_string(int fd, char *arr, int n) {

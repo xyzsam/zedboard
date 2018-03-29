@@ -12,13 +12,13 @@ add_files -cflags "-I../../../common/src" -tb ../../../common/src/machsuite_new_
 set clock 10
 set part {xc7z020clg484-1}
 
-open_solution fft
+open_solution -reset solution_baseline_3
 set_part $part
 create_clock -period $clock
 #set_clock_uncertainty 0
 source ./fft_dir
 config_rtl -reset all -reset_level low
 csynth_design
-cosim_design -tool modelsim -rtl verilog -trace_level all
-export_design -format ip_catalog
+#cosim_design -tool modelsim -rtl verilog -trace_level all
+#export_design -format ip_catalog
 exit

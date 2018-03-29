@@ -5,16 +5,16 @@
 # set_directive_resource -core RAM_1P_BRAM "viterbi" Obs
 
 # partitioning
-# set_directive_array_partition -factor 6 -type cyclic viterbi v
-# set_directive_array_partition -factor 16 -type cyclic viterbi transMat
-# set_directive_array_partition -factor 16 -type cyclic viterbi obsLik
-# set_directive_array_partition -factor 16 -type cyclic viterbi Obs
+set_directive_array_partition -factor 32 -type cyclic viterbi v
+set_directive_array_partition -factor 32 -type cyclic viterbi transMat
+set_directive_array_partition -factor 32 -type cyclic viterbi obsLik
+set_directive_array_partition -factor 32 -type cyclic viterbi Obs
 
 # unrolling
-# set_directive_unroll -factor 16 viterbi/v1
-# set_directive_unroll -factor 16 viterbi/v2
-# set_directive_unroll -factor 16 viterbi/v3
-# set_directive_unroll -factor 16 viterbi/v4
+set_directive_unroll -factor 32 viterbi/v1
+set_directive_unroll -factor 32 viterbi/v2
+set_directive_unroll -factor 32 viterbi/v3
+set_directive_unroll -factor 32 viterbi/v4
 
 # pipeline
 # set_directive_pipeline viterbi/v1

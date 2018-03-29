@@ -7,8 +7,9 @@ add_files -tb -cflags "-DHLS_TB" ../../../common/src/machsuite_harness.c
 
 set_top gemm
 
-open_solution solution_zynq_baseline_axis_arr
+open_solution solution_baseline
 set_part {xc7z020clg484-1}
+#source ./gemm_dir
 create_clock -period 10
 csynth_design
 # cosim_design -rtl verilog -tool modelsim -trace_level all -argv "input8.data check.data"

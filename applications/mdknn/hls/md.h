@@ -1,3 +1,6 @@
+#ifndef _MD_H_
+#define _MD_H_
+
 /*
 Implemenataion based on:
 A. Danalis, G. Marin, C. McCurdy, J. S. Meredith, P. C. Roth, K. Spafford, V. Tipparaju, and J. S. Vetter.
@@ -49,3 +52,5 @@ struct bench_args_float_t {
   TYPE position_z[nAtoms];
   TYPE NL[nAtoms*maxNeighbors];
 };
+
+#endif

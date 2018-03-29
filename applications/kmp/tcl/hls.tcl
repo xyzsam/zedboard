@@ -11,7 +11,8 @@ add_files -cflags "-DZYNQ -I../../../common/src" -tb ../../../common/src/machsui
 
 set_top kmp
 
-open_solution -reset solution
+open_solution -reset solution_baseline
+# open_solution solution16
 set_part {xc7z020clg484-1}
 create_clock -period 10
 source ./kmp_dir

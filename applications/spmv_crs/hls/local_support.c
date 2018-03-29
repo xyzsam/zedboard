@@ -11,23 +11,27 @@ void run_benchmark_axi(void *vargs) {
   struct bench_args_float_t new_args;
   int i;
   TYPE hash;
+  for (i = 0; i < NNZ; i++) {
+    new_args.val[i].fp = args->val[i];
+    // printf("new val[%d] = %x, %2.2f, %2.2f\n", i, new_args.val[i].bits, new_args.val[i].fp, args->val[i]);
+  }
   for (i = 0; i < NNZ; i++)
-    new_args.val[i] = args->val[i];
-  for (i = 0; i < NNZ; i++)
-    new_args.cols[i] = (TYPE)args->cols[i];
+    new_args.cols[i].bits = args->cols[i];
   for (i = 0; i < N+1; i++)
-    new_args.rowDelimiters[i] = (TYPE)args->rowDelimiters[i];
-  for (i = 0; i < N; i++)
-    new_args.vec[i] = args->vec[i];
+    new_args.rowDelimiters[i].bits = args->rowDelimiters[i];
+  for (i = 0; i < N; i++) {
+    new_args.vec[i].fp = args->vec[i];
+    // printf("new vec[%d] = %x, %2.2f, %2.2f\n", i, new_args.vec[i].bits, new_args.vec[i].fp, args->vec[i]);
+  }
 
-  TYPE* in_stream = (TYPE*)&new_args;
-  TYPE* out_stream = &(new_args.out[0]);
+  STREAM_TYPE* in_stream = (STREAM_TYPE*)&new_args;
+  STREAM_TYPE* out_stream = &(new_args.out[0]);
 
   spmv(in_stream, out_stream);
   memcpy(&args->out[0], &new_args.out[0], N*sizeof(TYPE));
   hash = 0;
   for (i = 0; i < N; i++)
-    hash += new_args.out[i];
+    hash += new_args.out[i].fp;
   printf("Hash: %2.8f\n", hash);
 }
 #endif

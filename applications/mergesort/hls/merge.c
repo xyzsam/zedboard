@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "merge.h"
 
-int temp[NUM];
 
 void merge(int a[NUM], int start, int m, int stop) {
+  int temp[NUM];
   int i, j, k;
 
 merge_label1:

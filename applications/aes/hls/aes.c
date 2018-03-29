@@ -103,7 +103,8 @@ void aes_subBytes(uint8_t *buf)
 {
     register uint8_t i = 16;
 
-    sub : while (i--) buf[i] = rj_sbox(buf[i]);
+    // sub : while (i--) buf[i] = rj_sbox(buf[i]);
+    sub : for (i = 16; i > 0; i--) buf[i] = rj_sbox(buf[i]);
 } /* aes_subBytes */
 
 /* -------------------------------------------------------------------------- */
@@ -111,7 +112,8 @@ void aes_addRoundKey(uint8_t *buf, uint8_t *key)
 {
     register uint8_t i = 16;
 
-    addkey : while (i--) buf[i] ^= key[i];
+    // addkey : while (i--) buf[i] ^= key[i];
+    addkey : for(i = 16; i >= 0; i--) buf[i] ^= key[i];
 } /* aes_addRoundKey */
 
 /* -------------------------------------------------------------------------- */
@@ -119,7 +121,8 @@ void aes_addRoundKey_cpy(uint8_t *buf, uint8_t *key, uint8_t *cpk)
 {
     register uint8_t i = 16;
 
-    cpkey : while (i--)  buf[i] ^= (cpk[i] = key[i]), cpk[16+i] = key[16 + i];
+    // cpkey : while (i--)  buf[i] ^= (cpk[i] = key[i]), cpk[16+i] = key[16 + i];
+    cpkey : for(i = 16; i > 0; i--)  buf[i] ^= (cpk[i] = key[i]), cpk[16+i] = key[16 + i];
 } /* aes_addRoundKey_cpy */
 
 

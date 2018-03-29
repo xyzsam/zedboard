@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <assert.h>
 
-#define WRITE_OUTPUT
-#define CHECK_OUTPUT
+// #define WRITE_OUTPUT
+// #define CHECK_OUTPUT
 
 #include "support.h"
 
@@ -41,6 +41,7 @@ int main(int argc, char **argv)
   
   // Unpack and call
   run_benchmark( data );
+  fflush(stdout);
 
   #ifdef WRITE_OUTPUT
   int out_fd;

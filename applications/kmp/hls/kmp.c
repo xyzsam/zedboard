@@ -45,13 +45,13 @@ int kmp_kernel(char pattern[PATTERN_SIZE], char input[STRING_SIZE],
 
 int kmp(int32_t* in_stream) {
 #pragma HLS INTERFACE s_axilite bundle=BUS_A port=return
-#pragma HLS INTERFACE axis bundle=INPUT_STREAM port=in_stream
-  char pattern[PATTERN_SIZE];
+#pragma HLS INTERFACE axis bundle=INPUT_STREAM depth=32415 port=in_stream
   char input[STRING_SIZE];
+  char pattern[PATTERN_SIZE];
   int32_t kmpNext[PATTERN_SIZE];
   int32_t n_matches[1];
   int32_t temp;
-  int i, j;
+  int i, j, q;
 
 pattern_outer: for (i = 0; i < PATTERN_SIZE; i+=4) {
 #pragma HLS PIPELINE II=1
@@ -59,6 +59,7 @@ pattern_outer: for (i = 0; i < PATTERN_SIZE; i+=4) {
 pattern_inner:for (j = 0; j < 4; j++) {
 #pragma HLS UNROLL
       pattern[i + j] = (temp >> (j*8)) & 0xff;
+      kmpNext[j] = 0;
     }
   }
 
@@ -71,7 +72,24 @@ input_inner: for (j = 0; j < 4; j++) {
     }
   }
 
-  kmp_kernel(pattern, input, kmpNext, n_matches);
+  // kmp_kernel(pattern, input, kmpNext, n_matches);
+    n_matches[0] = 0;
+
+    CPF(pattern, kmpNext);
+
+    q = 0;
+    k1 : for(i = 0; i < STRING_SIZE; i++){
+        k2 : while (q > 0 && pattern[q] != input[i]){
+            q = kmpNext[q];
+        }
+        if (pattern[q] == input[i]){
+            q++;
+        }
+        if (q >= PATTERN_SIZE){
+            n_matches[0]++;
+            q = kmpNext[q - 1];
+        }
+    }
 
   return n_matches[0];
 }

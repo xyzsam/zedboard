@@ -9,21 +9,21 @@
 #set_directive_resource -core RAM_1P_BRAM "mdknn" position_z
 #set_directive_resource -core RAM_1P_BRAM "mdknn" NL
 
-#set_directive_array_partition -factor 4 -type cyclic mdknn force_x
-#set_directive_array_partition -factor 4 -type cyclic mdknn force_y
-#set_directive_array_partition -factor 4 -type cyclic mdknn force_z
-#set_directive_array_partition -factor 4 -type cyclic mdknn position_x
-#set_directive_array_partition -factor 4 -type cyclic mdknn position_y
-#set_directive_array_partition -factor 4 -type cyclic mdknn position_z
-#set_directive_array_partition -factor 4 -type cyclic mdknn NL
+set_directive_array_partition -factor 16 -type cyclic mdknn force_x
+set_directive_array_partition -factor 16 -type cyclic mdknn force_y
+set_directive_array_partition -factor 16 -type cyclic mdknn force_z
+set_directive_array_partition -factor 16 -type cyclic mdknn position_x
+set_directive_array_partition -factor 16 -type cyclic mdknn position_y
+set_directive_array_partition -factor 16 -type cyclic mdknn position_z
+set_directive_array_partition -factor 16 -type cyclic mdknn NL
 
 #set_directive_unroll -factor 1 mdknn/loop_i
-#set_directive_unroll -factor 4 mdknn/loop_j
+set_directive_unroll -factor 16 mdknn/loop_j
 
 #set_directive_loop_flatten mdknn/loopj
 #set_directive_loop_flatten mdknn/loop_j
 
-#set_directive_pipeline mdknn/loopi
+#set_directive_pipeline mdknn/loop_i
 #set_directive_pipeline mdknn/loop_j
 
 #set_directive_resource -core Mul "mdknn" mult
